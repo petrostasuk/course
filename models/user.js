@@ -17,6 +17,10 @@ var UserSchema = new Schema({
         required: [true, "This field is required"],
         minlength: [6, "Min length is 6 symbols"],
     },
+    role: {
+        type: Schema.Types.ObjectId,
+        ref: "Role"
+    }
 }, {
     toJSON: {
         transform: function (doc, ret) {

@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+  <form method="post" action="/stripe/charge">
+    <script class="stripe-button" data-amount="500" data-key="<%= publicKey %>" src="//checkout.stripe.com/v2/checkout.js"></script>
+    </form>
+  </body>
+</html>

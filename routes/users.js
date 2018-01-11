@@ -1,22 +1,44 @@
 var express = require('express');
 var mongoose = require('mongoose');
 var router = express.Router();
+var isLoggined = require(__dirname + "/../middlewares/isLoggined");
+var currentUser = require(__dirname + "/../middlewares/currentUser");
+var checkPermission = require(__dirname + "/../middlewares/checkPermission");
 
 module.exports = function (app) {
 
     app.use("/user", router);
 
-    router.get('/', function(req, res, next) {
+    router.get('/', [isLoggined, currentUser, checkPermission("User.read")], function(req, res, next) {
         var User = mongoose.model("User");
-        User.find({}).exec(function (err, users) {
+        var query = User.find({});
+        if (req.query.limit) {
+            query.limit(+req.query.limit);
+        }
+        if (req.query.skip) {
+            query.skip(+req.query.skip);
+        }
+        query.exec(function (err, users) {
             if (err) {
                 return res.status(500).send(err);
             }
             res.status(200).send(users);
-        })
+        });
     });
 
-    router.get('/:id', function(req, res, next) {
+    router.get('/count', [isLoggined, currentUser, checkPermission("User.read")], function(req, res, next) {
+        var User = mongoose.model("User");
+        User.count({}, function (err, count) {
+            if (err) {
+                return res.status(500).send(err);
+            }
+            res.status(200).send({
+                count: count
+            });
+        });
+    });
+
+    router.get('/:id', [isLoggined, currentUser, checkPermission("User.read")], function(req, res, next) {
         var User = mongoose.model("User");
         User.findOne({_id: req.params.id}).exec(function (err, user) {
             if (err) {
@@ -29,7 +51,9 @@ module.exports = function (app) {
         })
     });
 
-    router.post('/', [function (req, res, next) {}], function(req, res, next) {
+    // User.create
+    router.post('/', [isLoggined, currentUser, checkPermission("User.create")], function(req, res, next) {
+
         var User = mongoose.model("User");
         User.create(req.body, function (err, createdUser) {
             if (err) {
@@ -39,7 +63,7 @@ module.exports = function (app) {
             res.status(200).send(createdUser);
         });
     });
-    router.post('/:id', function(req, res, next) {
+    router.post('/:id', [isLoggined, currentUser, checkPermission("User.update")], function(req, res, next) {
         var User = mongoose.model("User");
         User.findOne({_id: req.params.id}).exec(function (err, user) {
             if (err) {
@@ -57,7 +81,7 @@ module.exports = function (app) {
         })
     });
 
-    router.delete('/:id', function(req, res, next) {
+    router.delete('/:id', [isLoggined, currentUser, checkPermission("User.delete")], function(req, res, next) {
         var User = mongoose.model("User");
         User.remove({_id: req.params.id}, function (err) {
             if (err) {
